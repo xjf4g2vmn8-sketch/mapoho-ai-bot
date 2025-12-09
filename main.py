@@ -51,7 +51,7 @@ async def chat(request: Request):
 
     except Exception as e:
         return {"error": str(e)}
-Subject: Callback Request from Mapoho AI
+msg["Subject"] = "Callback Request from Mapoho AI"
 From: info@mapoho.co.za
 To: info@mapoho.co.za
 
