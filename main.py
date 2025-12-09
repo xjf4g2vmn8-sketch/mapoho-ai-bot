@@ -55,9 +55,42 @@ Subject: Callback Request from Mapoho AI
 From: info@mapoho.co.za
 To: info@mapoho.co.za
 
-📞 New Callback Request from Mapoho AI Bot
-Name: John Smith
-Phone: 083 555 1234
-Message: Please call me about policy upgrades.
+# ===============================
+#  MAPOHO AI – Callback Endpoint (Clean Version)
+# ===============================
+from fastapi import Form
+from fastapi.responses import JSONResponse
+import smtplib
+from email.mime.text import MIMEText
+import os
+
+@app.post("/api/callback")
+async def callback_request(
+    name: str = Form(...),
+    phone: str = Form(...),
+    message: str = Form("")
+):
+    body = f"""
+    New Callback Request from Mapoho AI Bot
+
+    Name: {name}
+    Phone: {phone}
+    Message: {message}
+    """
+
+    msg = MIMEText(body)
+    msg["Subject"] = "Callback Request from Mapoho AI"
+    msg["From"] = os.getenv("SMTP_USER")
+    msg["To"] = os.getenv("ADMIN_EMAIL")
+
+    try:
+        with smtplib.SMTP(os.getenv("SMTP_SERVER"), int(os.getenv("SMTP_PORT"))) as server:
+            server.starttls()
+            server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
+            server.send_message(msg)
+
+        return JSONResponse({"status": "success", "message": "Callback request sent successfully"})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)})
 
 
