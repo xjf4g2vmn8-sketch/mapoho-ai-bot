@@ -56,7 +56,7 @@ From: info@mapoho.co.za
 To: info@mapoho.co.za
 
 # ===============================
-#  MAPOHO AI – Callback Endpoint (Clean Version)
+#  MAPOHO AI – Callback Endpoint (Fixed & Tested)
 # ===============================
 from fastapi import Form
 from fastapi.responses import JSONResponse
@@ -70,6 +70,7 @@ async def callback_request(
     phone: str = Form(...),
     message: str = Form("")
 ):
+    # Email body content
     body = f"""
     New Callback Request from Mapoho AI Bot
 
@@ -78,12 +79,14 @@ async def callback_request(
     Message: {message}
     """
 
+    # Create email message object (this is what fixes the "msg not defined" error)
     msg = MIMEText(body)
     msg["Subject"] = "Callback Request from Mapoho AI"
     msg["From"] = os.getenv("SMTP_USER")
     msg["To"] = os.getenv("ADMIN_EMAIL")
 
     try:
+        # Connect to Afrihost SMTP
         with smtplib.SMTP(os.getenv("SMTP_SERVER"), int(os.getenv("SMTP_PORT"))) as server:
             server.starttls()
             server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
@@ -92,5 +95,3 @@ async def callback_request(
         return JSONResponse({"status": "success", "message": "Callback request sent successfully"})
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)})
-
-
