@@ -56,7 +56,7 @@ From: info@mapoho.co.za
 To: info@mapoho.co.za
 
 # ===============================
-#  MAPOHO AI – Callback Endpoint (Fixed & Tested)
+#  MAPOHO AI – Callback Endpoint (Final Clean Build)
 # ===============================
 from fastapi import Form
 from fastapi.responses import JSONResponse
@@ -70,28 +70,38 @@ async def callback_request(
     phone: str = Form(...),
     message: str = Form("")
 ):
-    # Email body content
-    body = f"""
-    New Callback Request from Mapoho AI Bot
-
-    Name: {name}
-    Phone: {phone}
-    Message: {message}
     """
-
-    # Create email message object (this is what fixes the "msg not defined" error)
-    msg = MIMEText(body)
-    msg["Subject"] = "Callback Request from Mapoho AI"
-    msg["From"] = os.getenv("SMTP_USER")
-    msg["To"] = os.getenv("ADMIN_EMAIL")
-
+    Handles callback requests from the frontend.
+    Sends an email to info@mapoho.co.za using Afrihost SMTP.
+    """
     try:
-        # Connect to Afrihost SMTP
-        with smtplib.SMTP(os.getenv("SMTP_SERVER"), int(os.getenv("SMTP_PORT"))) as server:
+        # --- Build the email body ---
+        body = (
+            f"New Callback Request from Mapoho AI Bot\n\n"
+            f"Name: {name}\n"
+            f"Phone: {phone}\n"
+            f"Message: {message}\n"
+        )
+
+        # --- Create the message object ---
+        msg = MIMEText(body)
+        msg["Subject"] = "Callback Request from Mapoho AI"
+        msg["From"] = os.getenv("SMTP_USER")
+        msg["To"] = os.getenv("ADMIN_EMAIL")
+
+        # --- Connect and send email ---
+        smtp_server = os.getenv("SMTP_SERVER")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_pass = os.getenv("SMTP_PASS")
+
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
-            server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
+            server.login(smtp_user, smtp_pass)
             server.send_message(msg)
 
         return JSONResponse({"status": "success", "message": "Callback request sent successfully"})
+
     except Exception as e:
+        # Return the specific error for debugging
         return JSONResponse({"status": "error", "message": str(e)})
